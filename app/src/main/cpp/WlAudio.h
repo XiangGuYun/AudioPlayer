@@ -59,9 +59,11 @@ public:
 
 public:
     WlAudio(WlPlayStatus *playstatus, int sample_rate, WlCallJava *callJava);
+
     ~WlAudio();
 
     void play();
+
     int resampleAudio();
 
     void initOpenSLES();

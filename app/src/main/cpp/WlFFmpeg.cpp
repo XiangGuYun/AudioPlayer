@@ -1,8 +1,3 @@
-//
-// Created by yangw on 2018-2-28.
-//
-
-
 #include "WlFFmpeg.h"
 
 WlFFmpeg::WlFFmpeg(WlPlayStatus *playstatus, WlCallJava *callJava, const char *url) {
@@ -193,7 +188,7 @@ void WlFFmpeg::start() {
     }
     if(callJava != NULL)
     {
-//        callJava->onCallComplete(CHILD_THREAD);
+        callJava->onCallComplete(CHILD_THREAD);
     }
     exit = true;
 

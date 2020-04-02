@@ -32,10 +32,13 @@ public:
     pthread_mutex_t seek_mutex;
 public:
     WlFFmpeg(WlPlayStatus *playstatus, WlCallJava *callJava, const char *url);
+
     ~WlFFmpeg();
 
     void prepared();
+
     void decodeFFmpegThread();
+
     void start();
 
     void pause();

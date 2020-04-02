@@ -1,5 +1,7 @@
 package com.android.audioplayer.multithread_decode_audio
 
+import android.widget.Toast
+
 class WlPlayer {
     //音频源
     lateinit var source: String
@@ -13,7 +15,10 @@ class WlPlayer {
     var playingListener:WlOnPlayingListener? = null
     //错误监听器
     var errorListener:WlOnErrorListener? = null
+    //完成监听器
+    var completeListener:WlOnCompleteListener? = null
     var timeInfo:TimeInfo? = null
+    var stopped = false
 
     /**
      * 准备完成监听器
@@ -36,6 +41,10 @@ class WlPlayer {
 
     fun setOnWlOnErrorListener(listener: WlOnErrorListener){
         this.errorListener = listener
+    }
+
+    fun setOnCompleteListener(listener: WlOnCompleteListener){
+        this.completeListener = listener
     }
 
     /**
@@ -76,6 +85,11 @@ class WlPlayer {
         errorListener?.onError(code, msg)
     }
 
+    fun onComplete(){
+        stop()
+        completeListener?.onComplete()
+    }
+
     fun progress(currentTime:Int, totalTime:Int){
         synchronized(this){
             if(timeInfo == null) timeInfo = TimeInfo()
@@ -106,6 +120,7 @@ class WlPlayer {
      */
     fun start() {
         if (source.isEmpty()) return
+        stopped = false
         Thread {
             startNative()
         }.start()
@@ -115,6 +130,7 @@ class WlPlayer {
         if (source.isEmpty()){
             return
         }
+        stopped = true
         Thread{
             stopNative()
         }.start()

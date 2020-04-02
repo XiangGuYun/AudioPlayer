@@ -23,7 +23,8 @@ WlCallJava::WlCallJava(_JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmidPrepared = env->GetMethodID(jlz, "onCallPrepared", "()V");
     jmidLoaded = env->GetMethodID(jlz, "onCallLoaded", "(Z)V");
     jmidProgress = env->GetMethodID(jlz, "progress", "(II)V");
-//    jmidError = env->GetMethodID(jlz, "error", "(ILjava/lang/String;)V");
+    jmidError = env->GetMethodID(jlz, "error", "(ILjava/lang/String;)V");
+    jmidComplete = env->GetMethodID(jlz, "onComplete", "()V");
 }
 
 void WlCallJava::onCallPrepared(int type) {
@@ -91,23 +92,40 @@ WlCallJava::~WlCallJava() {
 }
 
 void WlCallJava::onCallError(int type, int code, char *msg) {
-//    if(type == MAIN_THREAD)
-//    {
-//        jstring jmsg = jniEnv->NewStringUTF(msg);
-//        jniEnv->CallVoidMethod(jobj, jmidError, code, jmsg);
-//        jniEnv->DeleteLocalRef(jmsg);
-//    }
-//    else if(type == CHILD_THREAD)
-//    {
-//        JNIEnv *jniEnv;
-//        if(javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
-//        {
-//            LOGE("发生了错误")
-//            return;
-//        }
-//        jstring jmsg = jniEnv->NewStringUTF(msg);
-//        jniEnv->CallVoidMethod(jobj, jmidError, code, jmsg);
-//        jniEnv->DeleteLocalRef(jmsg);
-//        javaVM->DetachCurrentThread();
-//    }
+    if(type == MAIN_THREAD)
+    {
+        jstring jmsg = jniEnv->NewStringUTF(msg);
+        jniEnv->CallVoidMethod(jobj, jmidError, code, jmsg);
+        jniEnv->DeleteLocalRef(jmsg);
+    }
+    else if(type == CHILD_THREAD)
+    {
+        JNIEnv *jniEnv;
+        LOGE("发生了错误1")
+        if(javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+        {
+            return;
+        }
+        jstring jmsg = jniEnv->NewStringUTF(msg);
+        jniEnv->CallVoidMethod(jobj, jmidError, code, jmsg);
+        jniEnv->DeleteLocalRef(jmsg);
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void WlCallJava::onCallComplete(int type) {
+    if(type == MAIN_THREAD)
+    {
+        jniEnv->CallVoidMethod(jobj, jmidComplete);
+    }
+    else if(type == CHILD_THREAD)
+    {
+        JNIEnv *jniEnv;
+        if(javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+        {
+            return;
+        }
+        jniEnv->CallVoidMethod(jobj, jmidComplete);
+        javaVM->DetachCurrentThread();
+    }
 }

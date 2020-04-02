@@ -23,7 +23,8 @@ public:
     jmethodID jmidPrepared;
     jmethodID jmidLoaded;
     jmethodID jmidProgress;
-//    jmethodID jmidError;
+    jmethodID jmidError;
+    jmethodID jmidComplete;
 public:
     WlCallJava(_JavaVM *javaVM, JNIEnv *env, jobject *obj);
     ~WlCallJava();
@@ -35,6 +36,8 @@ public:
     void onCallProgress(int type, int currentTime, int totalTime);
 
     void onCallError(int type, int code, char *msg);
+
+    void onCallComplete(int type);
 
     void test();
 };

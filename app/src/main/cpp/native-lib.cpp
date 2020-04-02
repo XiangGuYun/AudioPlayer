@@ -147,6 +147,7 @@ JavaVM *javaVm = NULL;
 WlCallJava *callJava = NULL;
 WlFFmpeg *fFmpeg = NULL;
 WlPlayStatus *status = NULL;
+pthread_t threadStart;
 
 extern "C"
 JNIEXPORT jint JNICALL
@@ -178,13 +179,21 @@ Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_prepareNative(J
     }
 //    env->ReleaseStringUTFChars(source1, source);
 
-}extern "C"
+}
+
+void *startCallback(void *data){
+    WlFFmpeg *wlFFmpeg = static_cast<WlFFmpeg *>(data);
+    wlFFmpeg->start();
+    pthread_exit(&threadStart);
+}
+
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_startNative(JNIEnv *env,
                                                                              jobject thiz) {
 
     if (fFmpeg != NULL) {
-        fFmpeg->start();
+        pthread_create(&threadStart, NULL, startCallback, fFmpeg);
     }
 }
 
