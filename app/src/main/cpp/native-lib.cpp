@@ -165,9 +165,9 @@ JNI_OnLoad(JavaVM *vm, void *reserved) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_prepareNative(JNIEnv *env,
-                                                                               jobject thiz,
-                                                                               jstring source1) {
+Java_com_android_audioplayer_player_AudioPlayer_prepareNative(JNIEnv *env,
+                                                              jobject thiz,
+                                                              jstring source1) {
     const char *source = env->GetStringUTFChars(source1, 0);
     if (fFmpeg == NULL) {
         if (callJava == NULL) {
@@ -189,12 +189,98 @@ void *startCallback(void *data){
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_startNative(JNIEnv *env,
-                                                                             jobject thiz) {
+Java_com_android_audioplayer_player_AudioPlayer_startNative(JNIEnv *env,
+                                                            jobject thiz) {
 
     if (fFmpeg != NULL) {
         pthread_create(&threadStart, NULL, startCallback, fFmpeg);
     }
+}
+
+bool nexit = true;
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_pauseNative(JNIEnv *env,
+                                                            jobject thiz) {
+    if(fFmpeg != NULL){
+        fFmpeg->pause();
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_resumeNative(JNIEnv *env,
+                                                             jobject thiz) {
+    if(fFmpeg != NULL){
+        fFmpeg->resume();
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_stopNative(JNIEnv *env,
+                                                           jobject thiz) {
+    if(!nexit){
+        return;
+    }
+
+    jclass jlz = env->GetObjectClass(thiz);
+    jmethodID jmidPlayNext = env->GetMethodID(jlz, "onCallNext", "()V");
+
+    nexit = false;
+    if(fFmpeg != NULL){
+        fFmpeg->release();
+        delete(fFmpeg);
+        fFmpeg = NULL;
+        if(callJava != NULL){
+            delete(callJava);
+            callJava = NULL;
+        }
+        if(status != NULL){
+            delete(status);
+            status = NULL;
+        }
+    }
+    nexit = true;
+    env->CallVoidMethod(thiz, jmidPlayNext);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_seekNative(JNIEnv *env,
+                                                           jobject thiz,
+                                                           jint secds) {
+    if(fFmpeg != NULL){
+        fFmpeg->seek(secds);
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_setVolumeNative(JNIEnv *env,
+                                                                jobject thiz,
+                                                                jint percent) {
+    if(fFmpeg==NULL) return;
+    fFmpeg->setVolume(percent);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_setPitchNative(JNIEnv *env,
+                                                               jobject thiz,
+                                                               jfloat pitch) {
+    if(fFmpeg==NULL) return;
+    fFmpeg->setPitch(pitch);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_player_AudioPlayer_setTempoNative(JNIEnv *env,
+                                                               jobject thiz,
+                                                               jfloat tempo) {
+    if(fFmpeg==NULL) return;
+    fFmpeg->setTempo(tempo);
 }
 
 //// 引擎接口
@@ -255,8 +341,8 @@ Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_startNative(JNI
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_playPCM(JNIEnv *env, jobject instance,
-                                                               jstring url_) {
+Java_com_android_audioplayer_player_AudioPlayer_playPCM(JNIEnv *env, jobject instance,
+                                                        jstring url_) {
     const char *url = env->GetStringUTFChars(url_, 0);
 
 //    //读取pcm文件
@@ -337,90 +423,4 @@ Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_playPCM(JNIEnv 
 //    pcmBufferCallBack(pcmBufferQueue, NULL);
 
     env->ReleaseStringUTFChars(url_, url);
-}
-
-bool nexit = true;
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_pauseNative(JNIEnv *env,
-                                                                             jobject thiz) {
-    if(fFmpeg != NULL){
-        fFmpeg->pause();
-    }
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_resumeNative(JNIEnv *env,
-                                                                              jobject thiz) {
-    if(fFmpeg != NULL){
-        fFmpeg->resume();
-    }
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_stopNative(JNIEnv *env,
-                                                                       jobject thiz) {
-    if(!nexit){
-        return;
-    }
-
-    jclass jlz = env->GetObjectClass(thiz);
-    jmethodID jmidPlayNext = env->GetMethodID(jlz, "onCallNext", "()V");
-
-    nexit = false;
-    if(fFmpeg != NULL){
-        fFmpeg->release();
-        delete(fFmpeg);
-        fFmpeg = NULL;
-        if(callJava != NULL){
-            delete(callJava);
-            callJava = NULL;
-        }
-        if(status != NULL){
-            delete(status);
-            status = NULL;
-        }
-    }
-    nexit = true;
-    env->CallVoidMethod(thiz, jmidPlayNext);
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_seekNative(JNIEnv *env,
-                                                                            jobject thiz,
-                                                                            jint secds) {
-    if(fFmpeg != NULL){
-        fFmpeg->seek(secds);
-    }
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_setVolumeNative(JNIEnv *env,
-                                                                           jobject thiz,
-                                                                           jint percent) {
-    if(fFmpeg==NULL) return;
-    fFmpeg->setVolume(percent);
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_setPitchNative(JNIEnv *env,
-                                                                                jobject thiz,
-                                                                                jfloat pitch) {
-    if(fFmpeg==NULL) return;
-    fFmpeg->setPitch(pitch);
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_setTempoNative(JNIEnv *env,
-                                                                                jobject thiz,
-                                                                                jfloat tempo) {
-    if(fFmpeg==NULL) return;
-    fFmpeg->setTempo(tempo);
 }

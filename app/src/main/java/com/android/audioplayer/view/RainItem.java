@@ -1,4 +1,4 @@
-package com.android.audioplayer.multithread_decode_audio;
+package com.android.audioplayer.view;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;

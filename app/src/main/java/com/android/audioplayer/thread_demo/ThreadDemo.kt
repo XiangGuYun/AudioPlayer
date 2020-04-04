@@ -1,4 +1,4 @@
-package com.android.audioplayer
+package com.android.audioplayer.thread_demo
 
 import android.util.Log
 

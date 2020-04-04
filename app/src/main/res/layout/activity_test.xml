@@ -5,7 +5,7 @@
     android:background="#000000"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <com.android.audioplayer.multithread_decode_audio.RainView
+    <com.android.audioplayer.view.RainView
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 <LinearLayout
@@ -14,7 +14,7 @@
     android:orientation="vertical"
     android:padding="20dp"
     android:layout_gravity="center_vertical"
-    tools:context=".multithread_decode_audio.TestActivity">
+    tools:context=".player.AudioPlayerActivity">
     <TextView
         android:id="@+id/tvSongName"
         android:layout_width="match_parent"

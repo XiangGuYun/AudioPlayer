@@ -1,4 +1,4 @@
-package com.android.audioplayer.multithread_decode_audio
+package com.android.audioplayer.player.listener
 
 interface WlOnVolumeDBListener {
     fun onDbValue(db : Int)

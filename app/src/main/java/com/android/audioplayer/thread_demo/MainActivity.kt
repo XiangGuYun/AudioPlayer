@@ -1,8 +1,8 @@
-package com.android.audioplayer
+package com.android.audioplayer.thread_demo
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import com.android.audioplayer.R
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
