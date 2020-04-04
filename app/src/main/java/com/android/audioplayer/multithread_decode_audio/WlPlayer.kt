@@ -1,8 +1,8 @@
 package com.android.audioplayer.multithread_decode_audio
 
-import android.widget.Toast
+import android.app.Activity
 
-class WlPlayer {
+class WlPlayer(val ctx: Activity) {
     //音频源
     lateinit var source: String
     //准备完成监听器
@@ -12,39 +12,117 @@ class WlPlayer {
     //播放状态监听器
     var playStateListener: WlPlayStateListener? = null
     //播放进度监听器
-    var playingListener:WlOnPlayingListener? = null
+    var playingListener: WlOnPlayingListener? = null
     //错误监听器
-    var errorListener:WlOnErrorListener? = null
+    var errorListener: WlOnErrorListener? = null
     //完成监听器
-    var completeListener:WlOnCompleteListener? = null
-    var timeInfo:TimeInfo? = null
+    var completeListener: WlOnCompleteListener? = null
+    //振幅监听器
+    var volumeDBListener: WlOnVolumeDBListener? = null
+    var timeInfo: TimeInfo? = null
     var stopped = false
+    var paused = false
 
     /**
      * 准备完成监听器
      */
-    fun setWlOnPreparedListener(listener: WlOnPreparedListener) {
+
+    fun listenPrepared(callback: () -> Unit){
+        setWlOnPreparedListener(object :WlOnPreparedListener{
+            override fun onPrepared() {
+                ctx.runOnUiThread {
+                    callback.invoke()
+                }
+            }
+        })
+    }
+
+    private fun setWlOnPreparedListener(listener: WlOnPreparedListener) {
         this.listener = listener
     }
 
-    fun setWlOnLoadListener(listener: WlOnLoadListener) {
+    fun listenLoaded(callback: (load: Boolean) -> Unit){
+        setWlOnLoadListener(object :WlOnLoadListener{
+            override fun onLoad(load: Boolean) {
+                ctx.runOnUiThread {
+                    callback.invoke(load)
+                }
+            }
+        })
+    }
+
+    private fun setWlOnLoadListener(listener: WlOnLoadListener) {
         this.loadListener = listener
     }
 
-    fun setWlPlayStateListener(listener: WlPlayStateListener){
+    fun listenPlayState(callback: (pause: Boolean) -> Unit){
+        setWlPlayStateListener(object : WlPlayStateListener{
+            override fun onPause(pause: Boolean) {
+                ctx.runOnUiThread {
+                    callback.invoke(pause)
+                }
+            }
+        })
+    }
+
+    private fun setWlPlayStateListener(listener: WlPlayStateListener) {
         this.playStateListener = listener
     }
 
-    fun setWlPlayingListener(listener: WlOnPlayingListener){
+    fun listenPlaying(callback: (info: TimeInfo) -> Unit){
+        setWlPlayingListener(object : WlOnPlayingListener{
+            override fun progress(info: TimeInfo) {
+                ctx.runOnUiThread {
+                    callback.invoke(info)
+                }
+            }
+        })
+    }
+
+    private fun setWlPlayingListener(listener: WlOnPlayingListener) {
         this.playingListener = listener
     }
 
-    fun setOnWlOnErrorListener(listener: WlOnErrorListener){
+    fun listenError(callback: (code: Int, msg: String) -> Unit){
+        setOnWlOnErrorListener(object : WlOnErrorListener{
+            override fun onError(code: Int, msg: String) {
+                ctx.runOnUiThread {
+                    callback.invoke(code, msg)
+                }
+            }
+        })
+    }
+
+    private fun setOnWlOnErrorListener(listener: WlOnErrorListener) {
         this.errorListener = listener
     }
 
-    fun setOnCompleteListener(listener: WlOnCompleteListener){
+    fun listenCompleted(callback: () -> Unit){
+        setOnCompleteListener(object : WlOnCompleteListener{
+            override fun onComplete() {
+                ctx.runOnUiThread {
+                    callback.invoke()
+                }
+            }
+        })
+    }
+
+    private fun setOnCompleteListener(listener: WlOnCompleteListener) {
         this.completeListener = listener
+    }
+
+    fun listenVolumeDb(callback:(db:Int)->Unit){
+        setOnWlOnVolumeDbListener(object : WlOnVolumeDBListener{
+            override fun onDbValue(db: Int) {
+                ctx.runOnUiThread {
+                    callback.invoke(db)
+                }
+            }
+        })
+    }
+
+    private fun setOnWlOnVolumeDbListener(listener: WlOnVolumeDBListener){
+        this.volumeDBListener = listener
     }
 
     /**
@@ -57,14 +135,15 @@ class WlPlayer {
     /**
      * 此方法提供给C++调用
      */
-    fun onCallLoaded(load:Boolean){
+    fun onCallLoaded(load: Boolean) {
         loadListener?.onLoad(load)
     }
 
     /**
      * 此方法提供给C++调用
      */
-    fun pause(){
+    fun pause() {
+        paused = true
         pauseNative()
         playStateListener?.onPause(true)
     }
@@ -72,7 +151,8 @@ class WlPlayer {
     /**
      * 此方法提供给C++调用
      */
-    fun resume(){
+    fun resume() {
+        paused = false
         resumeNative()
         playStateListener?.onPause(false)
     }
@@ -80,24 +160,36 @@ class WlPlayer {
     /**
      * 此方法提供给C++调用
      */
-    fun error(code:Int, msg:String){
+    fun error(code: Int, msg: String) {
         stop()
         errorListener?.onError(code, msg)
     }
 
-    fun onComplete(){
+    /**
+     * 此方法提供给C++调用
+     */
+    fun onComplete() {
         stop()
         completeListener?.onComplete()
     }
 
-    fun progress(currentTime:Int, totalTime:Int){
-        synchronized(this){
-            if(timeInfo == null) timeInfo = TimeInfo()
+    /**
+     * 此方法提供给C++调用
+     */
+    fun progress(currentTime: Int, totalTime: Int) {
+        synchronized(this) {
+            if (timeInfo == null) timeInfo = TimeInfo()
             timeInfo?.currentTime = currentTime
             timeInfo?.totalTime = totalTime
             timeInfo?.let { playingListener?.progress(it) }
         }
+    }
 
+    /**
+     * 此方法提供给C++调用
+     */
+    fun onCallVolumeDB(db: Int){
+        volumeDBListener?.onDbValue(db)
     }
 
     /**
@@ -111,38 +203,82 @@ class WlPlayer {
         }.start()
     }
 
-    fun seek(secds:Int){
+    fun seek(secds: Int) {
         seekNative(secds)
     }
 
     /**
      * 开始播放
      */
-    fun start() {
+    fun start(startCallback:()->Unit) {
         if (source.isEmpty()) return
         stopped = false
         Thread {
             startNative()
+            startCallback.invoke()
         }.start()
     }
 
     fun stop() {
-        if (source.isEmpty()){
+        if (source.isEmpty()) {
             return
         }
         stopped = true
-        Thread{
+        Thread {
             stopNative()
         }.start()
     }
 
+    fun onCallNext() {
+        if (playNext) {
+            playNext = false
+            prepare()
+        }
+    }
+
+    fun playNext(url: String) {
+        source = url
+        playNext = true
+        stop()
+    }
+
+    fun setVolume(percent: Int) {
+        if (percent in 0..100)
+            setVolumeNative(percent)
+    }
+
+    fun setPitch(pitch: Float){
+        if(pitch in 0.1..2.0){
+            setPitchNative(pitch)
+        }
+    }
+
+    fun setTempo(tempo: Float){
+        if(tempo in 0.1..2.0){
+            setTempoNative(tempo)
+        }
+    }
+
+    /** 准备播放 */
     private external fun prepareNative(source: String)
-    private external fun startNative();
-    private external fun playPCM(file: String);
-    private external fun pauseNative();
-    private external fun resumeNative();
-    private external fun stopNative();
-    private external fun seekNative(secds:Int);
+    /** 开始播放 */
+    private external fun startNative()
+    /** 播放PCM文件 */
+    private external fun playPCM(file: String)
+    /** 暂停播放 */
+    private external fun pauseNative()
+    /** 恢复播放 */
+    private external fun resumeNative()
+    /** 停止播放 */
+    private external fun stopNative()
+    /** 改变进度 */
+    private external fun seekNative(secds: Int)
+    /** 设置音量 */
+    private external fun setVolumeNative(percent: Int)
+    /** 设置音调 */
+    private external fun setPitchNative(pitch: Float)
+    /** 设置速度 */
+    private external fun setTempoNative(tempo: Float)
 
     companion object {
         init {
@@ -156,5 +292,7 @@ class WlPlayer {
             System.loadLibrary("swresample-2")
             System.loadLibrary("swscale-4")
         }
+
+        var playNext = false
     }
 }

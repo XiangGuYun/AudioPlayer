@@ -366,6 +366,10 @@ Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_stopNative(JNIE
     if(!nexit){
         return;
     }
+
+    jclass jlz = env->GetObjectClass(thiz);
+    jmethodID jmidPlayNext = env->GetMethodID(jlz, "onCallNext", "()V");
+
     nexit = false;
     if(fFmpeg != NULL){
         fFmpeg->release();
@@ -381,7 +385,10 @@ Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_stopNative(JNIE
         }
     }
     nexit = true;
-}extern "C"
+    env->CallVoidMethod(thiz, jmidPlayNext);
+}
+
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_seekNative(JNIEnv *env,
                                                                             jobject thiz,
@@ -389,4 +396,31 @@ Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_seekNative(JNIE
     if(fFmpeg != NULL){
         fFmpeg->seek(secds);
     }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_setVolumeNative(JNIEnv *env,
+                                                                           jobject thiz,
+                                                                           jint percent) {
+    if(fFmpeg==NULL) return;
+    fFmpeg->setVolume(percent);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_setPitchNative(JNIEnv *env,
+                                                                                jobject thiz,
+                                                                                jfloat pitch) {
+    if(fFmpeg==NULL) return;
+    fFmpeg->setPitch(pitch);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_android_audioplayer_multithread_1decode_1audio_WlPlayer_setTempoNative(JNIEnv *env,
+                                                                                jobject thiz,
+                                                                                jfloat tempo) {
+    if(fFmpeg==NULL) return;
+    fFmpeg->setTempo(tempo);
 }

@@ -299,3 +299,21 @@ void WlFFmpeg::seek(int64_t secds) {
         }
     }
 }
+
+void WlFFmpeg::setVolume(int percent) {
+    if(audio==NULL)
+        return;
+    audio->setVolume(percent);
+}
+
+void WlFFmpeg::setPitch(float pitch) {
+    if(audio==NULL)
+        return;
+    audio->setPitch(pitch);
+}
+
+void WlFFmpeg::setTempo(float tempo) {
+    if(audio==NULL)
+        return;
+    audio->setTempo(tempo);
+}

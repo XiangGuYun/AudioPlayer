@@ -25,6 +25,7 @@ WlCallJava::WlCallJava(_JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmidProgress = env->GetMethodID(jlz, "progress", "(II)V");
     jmidError = env->GetMethodID(jlz, "error", "(ILjava/lang/String;)V");
     jmidComplete = env->GetMethodID(jlz, "onComplete", "()V");
+    jmidVolumeDb = env->GetMethodID(jlz, "onCallVolumeDB", "(I)V");
 }
 
 void WlCallJava::onCallPrepared(int type) {
@@ -126,6 +127,23 @@ void WlCallJava::onCallComplete(int type) {
             return;
         }
         jniEnv->CallVoidMethod(jobj, jmidComplete);
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void WlCallJava::onCallVolumeDB(int type, int db) {
+    if(type == MAIN_THREAD)
+    {
+        jniEnv->CallVoidMethod(jobj, jmidVolumeDb, db);
+    }
+    else if(type == CHILD_THREAD)
+    {
+        JNIEnv *jniEnv;
+        if(javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+        {
+            return;
+        }
+        jniEnv->CallVoidMethod(jobj, jmidVolumeDb, db);
         javaVM->DetachCurrentThread();
     }
 }

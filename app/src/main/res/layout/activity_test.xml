@@ -2,9 +2,12 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="#6699ff"
+    android:background="#000000"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+    <com.android.audioplayer.multithread_decode_audio.RainView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -12,29 +15,39 @@
     android:padding="20dp"
     android:layout_gravity="center_vertical"
     tools:context=".multithread_decode_audio.TestActivity">
+    <TextView
+        android:id="@+id/tvSongName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_gravity="center_horizontal"
+        android:text="歌曲名"
+        android:textSize="30sp"
+        android:textColor="#ffffff"
+        android:paddingBottom="50dp"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
         <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:background="#ffffff"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:src="@mipmap/play"
-            android:scaleType="fitXY"
             android:id="@+id/btnBegin"/>
         <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:background="#ffffff"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:src="@mipmap/pause"
-            android:scaleType="fitXY"
             android:layout_marginLeft="20dp"
             android:id="@+id/btnPause"/>
         <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:background="#ffffff"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:src="@mipmap/stop"
-            android:scaleType="fitXY"
             android:text="停止"
             android:layout_marginLeft="20dp"
             android:id="@+id/btnStop"/>
@@ -43,14 +56,94 @@
     <SeekBar
         android:id="@+id/seekBar"
         android:layout_marginTop="20dp"
+        android:progressDrawable="@drawable/sb_time"
+        android:thumb="@drawable/bg_seek_bar_thumb2"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="10dp"/>
     <TextView
         android:id="@+id/tvTime"
         android:text="00:00/00:00"
+        android:textColor="#ffffff"
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="30dp"
         android:gravity="center"/>
+    <LinearLayout
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:gravity="center_horizontal"
+        android:layout_height="30dp">
+        <Button
+            android:id="@+id/btnPre"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/bg_btn1"
+            android:text="上一曲"/>
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="20dp"
+            android:background="@drawable/bg_btn1"
+            android:text="下一曲"/>
+    </LinearLayout>
+   <LinearLayout
+       android:layout_marginTop="20dp"
+       android:layout_gravity="center_horizontal"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:orientation="horizontal">
+       <TextView
+           android:layout_width="wrap_content"
+           android:layout_height="30dp"
+           android:gravity="center"
+           android:textColor="#ffffff"
+           android:text="音量"/>
+       <SeekBar
+           android:id="@+id/sbVolume"
+           android:progress="100"
+           android:max="100"
+           android:layout_width="200dp"
+           android:layout_height="30dp"/>
+   </LinearLayout>
+    <LinearLayout
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:textColor="#ffffff"
+            android:text="变调"/>
+        <SeekBar
+            android:id="@+id/sbPitch"
+            android:progress="20"
+            android:max="40"
+            android:layout_width="200dp"
+            android:layout_height="30dp"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textColor="#ffffff"
+            android:gravity="center"
+            android:text="变速"/>
+        <SeekBar
+            android:id="@+id/sbTempo"
+            android:progress="20"
+            android:max="40"
+            android:layout_width="200dp"
+            android:layout_height="30dp"/>
+    </LinearLayout>
 </LinearLayout>
 </FrameLayout>

@@ -20,20 +20,29 @@ class TestActivity : AppCompatActivity() {
 
     lateinit var player: WlPlayer
     var playing = false
+    val songList = arrayListOf(
+        "海阔天空" to "http://sharefs.yun.kugou.com/202004040258/9a9147e70068345b0e197636e42039b1/G172/M05/14/0D/7A0DAF1xXbmAIZOSADIEJ1SxOn0675.mp3",
+        "那个女孩" to "http://sharefs.yun.kugou.com/202004040154/a2365114898251f25f3435a4769b39e2/G136/M04/1B/05/aJQEAFt2Qh6Adz96ADXZQ06lVQA689.mp3",
+        "那女孩对我说" to "http://sharefs.yun.kugou.com/202004040157/1368fe4ee30dbf168e459e00aef94b78/G012/M07/15/19/rIYBAFT7ycCAHnzYAEIzAFFAo1Y787.mp3",
+        "美人鱼" to "http://sharefs.yun.kugou.com/202004040221/1e8980fd735a56c4591fdb9c846d04c0/G006/M06/0B/15/Rg0DAFS33u2AFo9_AD4QE6gg03M473.mp3"
+    )
+    var currentSongIndex = 0
+    lateinit var timeInfo: TimeInfo
+    var currentTempo = 20
+    var currentPitch = 20
+    var currentVolume = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setContentView(R.layout.activity_test)
-        player = WlPlayer()
-        player.source = "http://sharefs.yun.kugou.com/202004022320/5074dee4cb9bddef14be3362e330cc1b/G006/M06/0B/15/Rg0DAFS33u2AFo9_AD4QE6gg03M473.mp3"
+        player = WlPlayer(this)
+        player.source = songList[0].second
 //        player.source = "/storage/emulated/0/Pictures/天空之城.mp3"
 
-        player.setWlOnLoadListener(object : WlOnLoadListener {
-            override fun onLoad(load: Boolean) {
-                Log.d("Test", if (load) "加载中" else "播放中")
-            }
-        })
+        player.listenLoaded { load ->
+            Log.d("Test", if (load) "加载中" else "播放中")
+        }
 
         btnPause.setOnClickListener {
             if (playing) {
@@ -57,62 +66,117 @@ class TestActivity : AppCompatActivity() {
                 }
         }
 
-        player.setWlOnPreparedListener(object : WlOnPreparedListener {
-            override fun onPrepared() {
-                Log.d("Test", "onPrepared...")
-                playing = true
-                player.start()
+        player.listenPrepared {
+            Log.d("Test", "onPrepared...")
+            tvSongName.text = songList[currentSongIndex].first
+            playing = true
+            player.start {
+                player.setPitch(currentPitch / 20f)
+                player.setTempo(currentTempo / 20f)
             }
-        })
+        }
 
-        player.setWlPlayStateListener(object : WlPlayStateListener {
-            override fun onPause(pause: Boolean) {
-                Log.d("Test", if (pause) "暂停中" else "播放中")
-            }
-        })
+        player.listenPlayState { pause ->
+            Log.d("Test", if (pause) "暂停中" else "播放中")
+        }
 
-        seekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 Log.d("Test", "progress is $progress")
-                if(fromUser){
+                if (fromUser) {
                     player.seek(progress)
                 }
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
 
             }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+        })
+
+        sbVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Log.d("Test", "progress is $progress")
+                if (fromUser) {
+                    if (!player.paused) player.pause()
+                    currentVolume = progress
+                    player.setVolume(0)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                player.resume()
+                player.setVolume(currentPitch)
+            }
+        })
+
+        sbPitch.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Log.d("Test", "progress is $progress")
+                if (fromUser) {
+                    currentPitch = progress
+                    player.setPitch(progress / 20f)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+        })
+
+        sbTempo.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Log.d("Test", "progress is $progress")
+                if (fromUser) {
+                    currentTempo = progress
+                    player.setTempo(progress / 20f)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
             }
         })
 
         val sdf = SimpleDateFormat("mm:ss")
-        player.setWlPlayingListener(object : WlOnPlayingListener {
-            override fun progress(info: TimeInfo) {
-                Log.d("Test", info.toString())
-                runOnUiThread {
-                    tvTime.text = "${sdf.format(info.currentTime * 1000)}/${sdf.format(info.totalTime * 1000)}"
-                    seekBar.max = info.totalTime
-                    seekBar.progress = info.currentTime
-                }
-            }
-        })
+        player.listenPlaying { info ->
+            timeInfo = info
+            tvTime.text =
+                "${sdf.format(info.currentTime * 1000)}/${sdf.format(info.totalTime * 1000)}"
+            seekBar.max = info.totalTime
+            seekBar.progress = info.currentTime
+        }
 
-        player.setOnWlOnErrorListener(object : WlOnErrorListener {
-            override fun onError(code: Int, msg: String) {
-                runOnUiThread {
-                    Toast.makeText(this@TestActivity, "code is $code, msg is $msg", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
+        player.listenError { code, msg ->
+            Toast.makeText(
+                this@TestActivity,
+                "code is $code, msg is $msg",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
-        player.setOnCompleteListener(object :WlOnCompleteListener{
-            override fun onComplete() {
-                runOnUiThread {
-                    Toast.makeText(this@TestActivity, "播放完成了", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
+        player.listenCompleted {
+            seekBar.progress = 0
+            tvTime.text = "00:00/${sdf.format(timeInfo.totalTime * 1000)}"
+        }
+
+        player.listenVolumeDb { db ->
+            Log.d("Test", "db is $db")
+        }
 
         btnStop.setOnClickListener {
             tvTime.text = "00:00/00:00"
@@ -120,11 +184,23 @@ class TestActivity : AppCompatActivity() {
             player.stop()
         }
 
+        btnPre.setOnClickListener {
+            if (currentSongIndex == 0) return@setOnClickListener
+            player.playNext(songList[--currentSongIndex].second)
+            tvSongName.text = songList[currentSongIndex].first
+        }
+
+        btnNext.setOnClickListener {
+            if (currentSongIndex == songList.size - 1) return@setOnClickListener
+            player.playNext(songList[++currentSongIndex].second)
+            tvSongName.text = songList[currentSongIndex].first
+        }
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if(!player.stopped)
+        if (!player.stopped)
             player.stop()
     }
 

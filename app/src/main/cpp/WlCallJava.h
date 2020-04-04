@@ -25,6 +25,7 @@ public:
     jmethodID jmidProgress;
     jmethodID jmidError;
     jmethodID jmidComplete;
+    jmethodID jmidVolumeDb;
 public:
     WlCallJava(_JavaVM *javaVM, JNIEnv *env, jobject *obj);
     ~WlCallJava();
@@ -38,6 +39,8 @@ public:
     void onCallError(int type, int code, char *msg);
 
     void onCallComplete(int type);
+
+    void onCallVolumeDB(int type, int db);
 
     void test();
 };
